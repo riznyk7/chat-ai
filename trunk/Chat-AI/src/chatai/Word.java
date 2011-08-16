@@ -13,14 +13,14 @@ public class Word implements Writable
 	private boolean capitalizable;
 	private int useCount;
 	private HashMap<Character,Integer> endPunctuation;
-	private HashSet<String> nextWords;
+	private HashSet<String> nextWritables;
 
 	private Word(String word) {
 		
 		this.word = word;
 		useCount = 1;
 		endPunctuation = new HashMap<Character,Integer>();
-		nextWords = new HashSet<String>();
+		nextWritables = new HashSet<String>();
 	}
 
 	/*
@@ -66,9 +66,9 @@ public class Word implements Writable
 	{
 		word = shrinkEndPunct(word);
 		char last = word.charAt(word.length() - 1);
-		
+		//TODO:Maybe add more punctuation that dont end sentences
 		if (!Character.isAlphabetic(last) && !Character.isDigit(last)
-				&& last != '\'') {
+				&& last != '\'' && last != ',') {
 			return true;
 		}
 		return false;
@@ -82,6 +82,10 @@ public class Word implements Writable
 	 */
 	private static String shrinkEndPunct(String word) {
 		// find last valid character
+		
+		word = word.replaceAll("\\.\\.+", ",");
+		word = word.replaceAll("!!+","!");
+		word = word.replaceAll("\\?\\?+","\\?");
 		int lastCharPos = -1;
 		for (int k = word.length() - 1; k >= 0; k--) {
 			if (Character.isAlphabetic(word.charAt(k))
@@ -143,13 +147,13 @@ public class Word implements Writable
 		
 	}
 
-	public HashSet<String> getNextWords() {
-		return nextWords;
+	public HashSet<String> getNextWritables() {
+		return nextWritables;
 	}
 
-	public void addNextWord(Word next) {
-		if(!next.getWord().equals(getWord()))
-			nextWords.add(next.getWord());
+	public void addNextWritable(Writable next) {
+		if(!next.getText().equals(getText()))
+			nextWritables.add(next.getText());
 	}
 	
 	public String toString()
@@ -163,12 +167,12 @@ public class Word implements Writable
 
 	@Override
 	public Writable getHeuristicNext(Map<String,Writable> writables) {
-		if(getNextWords().isEmpty())
+		if(getNextWritables().isEmpty())
 		{
 			return null;
 		}
 		HashSet<Writable> temp = new HashSet<Writable>();
-		for(String s:getNextWords())
+		for(String s:getNextWritables())
 			temp.add(writables.get(s));
 		TreeSet<Writable> ordered = new TreeSet<Writable>(new Comparator<Writable>(){
 
