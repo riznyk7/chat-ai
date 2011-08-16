@@ -42,10 +42,13 @@ public class ChatAI
 	public void addSentence(String sentence)
 	{
 		sentence = sentence.toLowerCase();
+		
 		Word last = null;
 		String lastStr = null;
+		
 		int counter = 0;
 		LinkedList<Word> phraseWords = new LinkedList<Word>();
+		Phrase lastPhrase = null;
 		for(String s:sentence.split(" "))
 		{
 			Word word = Word.createWord(s, (lastStr==null)?true:Word.hasEndPunctuation(lastStr));
@@ -54,7 +57,9 @@ public class ChatAI
 				word = addWord(word);
 				phraseWords.add(word);
 				if(last!=null)
-					last.addNextWord(word);
+					last.addNextWritable(word);
+				if(counter == 0 && lastPhrase != null)
+					lastPhrase.addNextWritable(word);
 				last = word;
 				lastStr = s;
 				counter++;
@@ -65,8 +70,15 @@ public class ChatAI
 			}
 			if(counter>=Phrase.PHRASE_LENGTH)
 			{
-				addPhrase(new Phrase(phraseWords));
+				Phrase phr = new Phrase(phraseWords);
+				addPhrase(phr);
+				if(lastPhrase!=null)
+				{
+					lastPhrase.addNextWritable(phr);
+					lastPhrase.getWords().getLast().addNextWritable(phr);
+				}
 				phraseWords = new LinkedList<Word>();
+				lastPhrase = phr;
 				counter = 0;
 			}
 				
@@ -90,7 +102,7 @@ public class ChatAI
 					oldWord.getEndPunctuation().put(p, newWord.getEndPunctuation().get(p));
 			}
 			
-			oldWord.getNextWords().addAll(newWord.getNextWords());
+			oldWord.getNextWritables().addAll(newWord.getNextWritables());
 			return oldWord;
 		}
 		else
@@ -121,7 +133,6 @@ public class ChatAI
 		while(begin==null || !begin.isCapitalizable())
 		{
 			begin = writables.get(getRandomSetObj(writables.keySet()));
-			//System.out.println(begin+"-"+begin.isCapitalizable());
 		}
 		Writable next = begin;
 		while(next!=null)
