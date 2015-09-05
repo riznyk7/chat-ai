@@ -1,0 +1,1 @@
+Chat-AI generates sentences based on the words most likely to come after each one.
